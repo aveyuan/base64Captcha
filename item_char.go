@@ -5,9 +5,6 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
-	"github.com/golang/freetype"
-	"github.com/golang/freetype/truetype"
-	"golang.org/x/image/font"
 	"image"
 	"image/color"
 	"image/draw"
@@ -16,7 +13,14 @@ import (
 	"log"
 	"math"
 	"math/rand"
+	"sync"
+
+	"github.com/golang/freetype"
+	"github.com/golang/freetype/truetype"
+	"golang.org/x/image/font"
 )
+
+var drawStringErrWarned sync.Map
 
 // ItemChar captcha item of unicode characters
 type ItemChar struct {
@@ -195,7 +199,9 @@ func (item *ItemChar) drawNoise(noiseText string, fonts []*truetype.Font) error 
 		c.SetFont(randFontFrom(fonts))
 		pt := freetype.Pt(rw, rh)
 		if _, err := c.DrawString(string(char), pt); err != nil {
-			log.Println(err)
+			if _, loaded := drawStringErrWarned.LoadOrStore(err.Error(), struct{}{}); !loaded {
+				log.Println(err)
+			}
 		}
 	}
 	return nil

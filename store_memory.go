@@ -34,12 +34,14 @@ type memoryStore struct {
 	sync.RWMutex
 	digitsById map[string]string
 	idByTime   *list.List
+	idByIdElem map[string]*list.Element
 	// Number of items stored since last collection.
 	numStored int
 	// Number of saved items that triggers collection.
 	collectNum int
 	// Expiration time of captchas.
 	expiration time.Duration
+	collecting bool
 }
 
 // NewMemoryStore returns a new standard memory store for captchas with the
@@ -49,17 +51,27 @@ func NewMemoryStore(collectNum int, expiration time.Duration) Store {
 	s := new(memoryStore)
 	s.digitsById = make(map[string]string)
 	s.idByTime = list.New()
+	s.idByIdElem = make(map[string]*list.Element)
 	s.collectNum = collectNum
 	s.expiration = expiration
 	return s
 }
 
 func (s *memoryStore) Set(id string, value string) error {
+	var needCollect bool
 	s.Lock()
 	s.digitsById[id] = value
-	s.idByTime.PushBack(idByTimeValue{time.Now(), id})
+	if oldElem, ok := s.idByIdElem[id]; ok {
+		s.idByTime.Remove(oldElem)
+		delete(s.idByIdElem, id)
+	}
+	elem := s.idByTime.PushBack(idByTimeValue{time.Now(), id})
+	s.idByIdElem[id] = elem
 	s.numStored++
-	needCollect := s.numStored > s.collectNum
+	if s.numStored > s.collectNum && !s.collecting {
+		s.collecting = true
+		needCollect = true
+	}
 	s.Unlock()
 	if needCollect {
 		go s.collect()
@@ -72,6 +84,8 @@ func (s *memoryStore) Verify(id, answer string, clear bool) bool {
 		return false
 	}
 	v := s.Get(id, clear)
+	v = strings.TrimSpace(v)
+	answer = strings.TrimSpace(answer)
 	return strings.EqualFold(v, answer)
 }
 
@@ -90,6 +104,10 @@ func (s *memoryStore) Get(id string, clear bool) (value string) {
 	}
 	if clear {
 		delete(s.digitsById, id)
+		if elem, ok := s.idByIdElem[id]; ok {
+			s.idByTime.Remove(elem)
+			delete(s.idByIdElem, id)
+		}
 	}
 	return
 }
@@ -101,6 +119,8 @@ func (s *memoryStore) collect() {
 	for e := s.idByTime.Front(); e != nil; {
 		e = s.collectOne(e, now)
 	}
+	s.numStored = 0
+	s.collecting = false
 }
 
 func (s *memoryStore) collectOne(e *list.Element, specifyTime time.Time) *list.Element {
@@ -112,6 +132,7 @@ func (s *memoryStore) collectOne(e *list.Element, specifyTime time.Time) *list.E
 
 	if ev.timestamp.Add(s.expiration).Before(specifyTime) {
 		delete(s.digitsById, ev.id)
+		delete(s.idByIdElem, ev.id)
 		next := e.Next()
 		s.idByTime.Remove(e)
 		s.numStored--

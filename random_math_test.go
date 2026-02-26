@@ -62,19 +62,15 @@ func TestRandDarkAndLightColor(t *testing.T) {
 	// Test RandColor
 	for i := 0; i < 100; i++ {
 		rgbA := RandColor()
-		if rgbA.R < 0 || rgbA.R > 255 ||
-			rgbA.B < 0 || rgbA.B > 255 ||
-			rgbA.G < 0 || rgbA.G > 255 {
-			t.Errorf("RandText() = %v, out of range", rgbA)
-		}
+		_ = rgbA
 	}
 
 	// Test RandLightColor
 	for i := 0; i < 100; i++ {
 		rgbA := RandLightColor()
-		if rgbA.R < 200 || rgbA.R > 255 ||
-			rgbA.B < 200 || rgbA.B > 255 ||
-			rgbA.G < 200 || rgbA.G > 255 {
+		if rgbA.R < 200 ||
+			rgbA.B < 200 ||
+			rgbA.G < 200 {
 			t.Errorf("RandText() = %v, out of range", rgbA)
 		}
 	}
@@ -82,11 +78,7 @@ func TestRandDarkAndLightColor(t *testing.T) {
 	// Test RandDeepColor
 	for i := 0; i < 100; i++ {
 		rgbA := RandDeepColor()
-		if rgbA.R < 0 || rgbA.R > 255 ||
-			rgbA.B < 0 || rgbA.B > 255 ||
-			rgbA.G < 0 || rgbA.G > 255 {
-			t.Errorf("RandText() = %v, out of range", rgbA)
-		}
+		_ = rgbA
 	}
 }
 

@@ -4,9 +4,12 @@ import (
 	"image/color"
 	"log"
 	"math/rand"
+	"sync"
 
 	"github.com/golang/freetype/truetype"
 )
+
+var unknownLangWarned sync.Map
 
 // https://en.wikipedia.org/wiki/Unicode_block
 var langMap = map[string][]int{
@@ -26,7 +29,9 @@ var langMap = map[string][]int{
 func generateRandomRune(size int, code string) string {
 	lang, ok := langMap[code]
 	if !ok {
-		log.Printf("can not font language of %s \n", code)
+		if _, loaded := unknownLangWarned.LoadOrStore(code, struct{}{}); !loaded {
+			log.Printf("can not font language of %s \n", code)
+		}
 		lang = langMap["latin"]
 	}
 	start := lang[0]

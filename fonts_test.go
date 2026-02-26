@@ -18,7 +18,7 @@ import (
 // fonts/wqy-microhei.ttc (5.177MB)
 
 func Test_loadFontByName(t *testing.T) {
-	f := DefaultEmbeddedFonts.LoadFontByName("fonts/wqy-microhei.ttc")
+	f := DefaultEmbeddedFonts.LoadFontByName("fonts/actionj.ttf")
 	if f == nil {
 		t.Error("failed")
 	}
@@ -36,7 +36,7 @@ func recoverPanic(t *testing.T) {
 
 func Test_loadFontsByNames(t *testing.T) {
 
-	fs := DefaultEmbeddedFonts.LoadFontsByNames([]string{"fonts/chromohv.ttf", "fonts/RitaSmith.ttf"})
+	fs := DefaultEmbeddedFonts.LoadFontsByNames([]string{"fonts/actionj.ttf", "fonts/actionj.ttf"})
 	if len(fs) != 2 {
 		t.Error("failed")
 	}

@@ -12,6 +12,13 @@ import (
 
 const counterLen = 20
 
+var (
+	_ = counterLen
+	_ = noSpace
+	_ = decodeKey
+	_ = totp
+)
+
 func noSpace(r rune) rune {
 	if unicode.IsSpace(r) {
 		return -1
